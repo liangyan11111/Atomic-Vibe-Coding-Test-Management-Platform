@@ -62,4 +62,54 @@
 ## UI 设计与组件规范 (UI & Styling Standards)
 
 - 模板默认预装核心组件库 `shadcn/ui`，位于`src/components/ui/`目录下
-- Next.js 项目**必须默认**采用 shadcn/ui 组件、风格和规范，**除非用户指定用其他的组件和规范。**
+- Next.js 项目**必须默认**采用 shadcn/ui 组件、风格和规范，**除非用户指定用其他的组件。**
+
+## 项目概述
+
+**TestHub** — 基于 Vibe Coding 架构设计的全功能测试管理平台。
+
+## 项目目录结构
+
+```
+src/
+├── app/                        # 页面路由
+│   ├── layout.tsx              # 根布局（SidebarProvider + 侧边栏 + 顶栏）
+│   ├── page.tsx                # 仪表盘首页
+│   ├── test-cases/page.tsx     # 用例管理
+│   ├── test-plans/page.tsx     # 测试计划
+│   ├── defects/page.tsx        # 缺陷管理
+│   ├── reports/page.tsx        # 测试报告
+│   ├── projects/page.tsx       # 项目管理
+│   ├── vibe-catalog/page.tsx   # 组件 Vibe 百科
+│   └── settings/page.tsx       # 系统设置
+├── components/
+│   ├── layout/
+│   │   ├── app-sidebar.tsx     # 侧边导航栏
+│   │   └── top-bar.tsx         # 顶部栏（搜索 + 通知 + 用户）
+│   ├── charts/
+│   │   └── dashboard-charts.tsx # 仪表盘图表组件
+│   └── ui/                     # shadcn/ui 基础组件
+├── lib/
+│   ├── utils.ts                # 工具函数 (cn)
+│   ├── types.ts                # 全局类型定义
+│   └── mock-data.ts            # Mock 数据与辅助函数
+```
+
+## 核心模块说明
+
+| 模块 | 路由 | 说明 |
+|------|------|------|
+| 仪表盘 | `/` | 总览 KPI、趋势图表、近期活动 |
+| 用例管理 | `/test-cases` | 用例 CRUD、搜索筛选、优先级/状态管理 |
+| 测试计划 | `/test-plans` | 计划创建、进度跟踪、任务分配 |
+| 缺陷管理 | `/defects` | 缺陷提交、状态流转、关联用例 |
+| 测试报告 | `/reports` | 统计图表、通过率分析、趋势报告 |
+| 项目管理 | `/projects` | 多项目切换、成员管理 |
+| Vibe 百科 | `/vibe-catalog` | 组件 Vibe Design 体系展示 |
+| 系统设置 | `/settings` | 用户偏好、通知配置 |
+
+## 数据层
+
+- 类型定义集中在 `src/lib/types.ts`
+- Mock 数据集中在 `src/lib/mock-data.ts`，包含辅助查询函数（如 `getTestCaseById`、`getMemberName` 等）
+- 后续接入真实 API 时，替换 mock-data 中的函数实现即可
