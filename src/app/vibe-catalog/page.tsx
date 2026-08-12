@@ -153,6 +153,77 @@ export default function VibeCatalogPage() {
         </Card>
       </div>
 
+      {/* Architecture Overview */}
+      <Card className="border-slate-200 bg-gradient-to-r from-indigo-50 to-violet-50">
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600">
+              <Blocks className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Vibe Coding 架构已落地</h3>
+                <p className="text-xs text-slate-600 mt-1">
+                  核心公式：Vibe Coding 产品 = Σ(组件_i × VibeDesign_i) + 模块级 Vibe 入口 + 全局 Vibe 入口 + 组件进化日志 + 组件级 Guard Layer
+                </p>
+              </div>
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { label: '组件级 Vibe Design', desc: '5 个核心组件 × 5 维文件', icon: Code2, color: 'text-indigo-600 bg-indigo-100' },
+                  { label: '契约驱动开发', desc: 'Zod Schema 四层契约', icon: FileCheck, color: 'text-emerald-600 bg-emerald-100' },
+                  { label: 'DDD 分层架构', desc: 'Entity + VO + Repository', icon: GitBranch, color: 'text-violet-600 bg-violet-100' },
+                  { label: 'Guard Layer', desc: '校验 + 门禁 + 审计', icon: Shield, color: 'text-amber-600 bg-amber-100' },
+                ].map(item => (
+                  <div key={item.label} className="rounded-lg border border-slate-200/60 bg-white/80 p-3">
+                    <div className={cn('mb-2 flex h-7 w-7 items-center justify-center rounded-lg', item.color)}>
+                      <item.icon className="h-3.5 w-3.5" />
+                    </div>
+                    <p className="text-xs font-medium text-slate-800">{item.label}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Real Vibe Catalog Directory */}
+      <Card className="border-slate-200 bg-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">已落地的组件 Vibe Design</CardTitle>
+          <CardDescription className="text-xs">
+            components/vibe-catalog/ 目录下已建立 5 个核心组件的完整 Vibe 体系
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-3">
+            {[
+              { name: 'SearchInput', level: 'L1', files: 5, desc: '搜索输入框' },
+              { name: 'DataTable', level: 'L3', files: 5, desc: '数据表格' },
+              { name: 'StatusBadge', level: 'L1', files: 5, desc: '状态徽章' },
+              { name: 'TestCaseForm', level: 'L2', files: 5, desc: '用例表单' },
+              { name: 'FilterBar', level: 'L1', files: 5, desc: '筛选栏' },
+            ].map(comp => (
+              <div key={comp.name} className="rounded-lg border border-slate-200 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 font-mono">{comp.name}</span>
+                  <Badge variant="outline" className="text-[9px] px-1 py-0">{comp.level}</Badge>
+                </div>
+                <p className="text-[10px] text-slate-500">{comp.desc}</p>
+                <div className="flex flex-wrap gap-1">
+                  {['vibe.md', 'contract.ts', 'rules.md', 'test.spec.ts', 'evolution.md'].map(f => (
+                    <span key={f} className="rounded bg-emerald-50 px-1 py-0.5 text-[8px] text-emerald-700 border border-emerald-200">
+                      {f.split('.')[0]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Filters */}
       <Card className="border-slate-200 bg-white">
         <CardContent className="flex items-center gap-3 p-4">

@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { testPlans, testCases, getMemberName, getProjectById, formatDate } from '@/lib/mock-data';
+import { ModuleVibeEntry } from '@/components/vibe-workspace';
 import type { TestPlan } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -70,9 +71,12 @@ export default function TestPlansPage() {
           <h1 className="text-xl font-bold text-slate-900">测试计划</h1>
           <p className="text-sm text-slate-500">创建和管理测试计划，跟踪测试进度与覆盖率</p>
         </div>
-        <Button size="sm" className="gap-1.5 bg-indigo-600 text-xs hover:bg-indigo-700" onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-3.5 w-3.5" />新建计划
-        </Button>
+        <div className="flex items-center gap-2">
+          <ModuleVibeEntry moduleName="测试计划" modulePath="/test-plans" />
+          <Button size="sm" className="gap-1.5 bg-indigo-600 text-xs hover:bg-indigo-700" onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-3.5 w-3.5" />新建计划
+          </Button>
+        </div>
       </div>
 
       {/* Status Tabs */}

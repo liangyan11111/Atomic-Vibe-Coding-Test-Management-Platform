@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { testCases, getMemberName, getProjectById } from '@/lib/mock-data';
+import { ModuleVibeEntry } from '@/components/vibe-workspace';
 import type { TestCase } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -113,6 +114,7 @@ export default function TestCasesPage() {
           <p className="text-sm text-slate-500">管理所有测试用例，支持分类、筛选和批量操作</p>
         </div>
         <div className="flex items-center gap-2">
+          <ModuleVibeEntry moduleName="用例管理" modulePath="/test-cases" />
           <Button variant="outline" size="sm" className="gap-1.5 text-xs">
             <Upload className="h-3.5 w-3.5" />导入
           </Button>

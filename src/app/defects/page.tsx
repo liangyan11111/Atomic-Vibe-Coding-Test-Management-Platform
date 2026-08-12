@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { defects, getMemberName, getProjectById, formatDate } from '@/lib/mock-data';
+import { ModuleVibeEntry } from '@/components/vibe-workspace';
 import type { Defect } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -81,9 +82,12 @@ export default function DefectsPage() {
           <h1 className="text-xl font-bold text-slate-900">缺陷管理</h1>
           <p className="text-sm text-slate-500">跟踪和管理所有缺陷，确保问题得到及时解决</p>
         </div>
-        <Button size="sm" className="gap-1.5 bg-indigo-600 text-xs hover:bg-indigo-700" onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-3.5 w-3.5" />提交缺陷
-        </Button>
+        <div className="flex items-center gap-2">
+          <ModuleVibeEntry moduleName="缺陷管理" modulePath="/defects" />
+          <Button size="sm" className="gap-1.5 bg-indigo-600 text-xs hover:bg-indigo-700" onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-3.5 w-3.5" />提交缺陷
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}

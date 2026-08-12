@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { TopBar } from '@/components/layout/top-bar';
+import { GlobalVibeEntry } from '@/components/vibe-workspace';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -29,6 +30,7 @@ export default function RootLayout({
             </div>
           </div>
           <Toaster />
+          <GlobalVibeEntry />
         </SidebarProvider>
       </body>
     </html>
