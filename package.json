@@ -89,7 +89,8 @@
     "tailwindcss": "^4",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

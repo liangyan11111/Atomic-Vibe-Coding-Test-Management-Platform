@@ -1,53 +1,41 @@
-/**
- * Command Handler - 创建缺陷
- */
-
 import { CreateDefectInputSchema, type CreateDefectInput } from '@/contracts/defect.contract';
-import { DefectEntity } from '@/domain/entities';
-import { withTrace, createAuditLog } from '@/guard';
-import type { Defect } from '@/lib/types';
+import { DefectEntity } from '@/domain/entities/defect.entity';
+import { getDefectRepository } from '@/infrastructure/repositories';
+import { withTrace } from '@/guard';
+
+export type CreateDefectCommand = CreateDefectInput;
 
 export async function handleCreateDefect(
-  input: CreateDefectInput,
-  userId: string,
-  projectId: string,
+  input: CreateDefectCommand,
   traceId?: string
-): Promise<Defect> {
-  return withTrace('CreateDefectHandler', async () => {
-    const validatedInput = CreateDefectInputSchema.parse(input);
+) {
+  return withTrace('CreateDefect', async () => {
+    const validated = CreateDefectInputSchema.parse(input);
 
-    const now = new Date().toISOString();
-    const defect = new DefectEntity({
+    const entity = new DefectEntity({
       id: `DEF-${Date.now()}`,
-      projectId,
-      title: validatedInput.title,
-      description: validatedInput.description,
-      severity: validatedInput.severity,
-      priority: validatedInput.priority,
+      projectId: 'default',
+      title: validated.title,
+      description: validated.description,
+      severity: validated.severity,
+      priority: validated.priority,
       status: 'open',
-      reportedBy: userId,
-      relatedTestCaseId: validatedInput.relatedTestCaseId || null,
+      environment: validated.environment ?? '',
+      stepsToReproduce: validated.stepsToReproduce ?? '',
+      expectedBehavior: validated.expectedResult ?? '',
+      actualBehavior: validated.actualResult ?? '',
+      reportedBy: 'current-user',
+      assignedTo: validated.assignedTo,
+      relatedTestCaseId: validated.relatedTestCaseId ?? null,
       relatedTestPlanId: null,
-      environment: validatedInput.environment || '',
-      stepsToReproduce: validatedInput.stepsToReproduce || '',
-      expectedBehavior: validatedInput.expectedResult || '',
-      actualBehavior: validatedInput.actualResult || '',
-      tags: [],
-      assignedTo: validatedInput.assignedTo,
-      createdAt: now,
-      updatedAt: now,
+      tags: validated.attachments ?? [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       resolvedAt: null,
     });
 
-    createAuditLog({
-      action: 'CREATE_DEFECT',
-      entityType: 'Defect',
-      entityId: defect.id,
-      userId,
-      details: { title: defect.title, severity: defect.severity, assignedTo: defect.assignedTo },
-      traceId,
-    });
-
-    return defect.toDTO();
+    const repo = getDefectRepository();
+    const created = await repo.create(entity.toDTO());
+    return created;
   });
 }

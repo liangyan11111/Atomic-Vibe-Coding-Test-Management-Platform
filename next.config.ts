@@ -1,17 +1,20 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // outputFileTracingRoot: path.resolve(__dirname, '../../'),  // Uncomment and add 'import path from "path"' if needed
   /* config options here */
-  allowedDevOrigins: ['*.dev.coze.site'],
-  images: {
-    remotePatterns: [
+  // 安全响应头配置
+  async headers() {
+    return [
       {
-        protocol: 'https',
-        hostname: '*',
-        pathname: '/**',
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+        ],
       },
-    ],
+    ];
   },
 };
 

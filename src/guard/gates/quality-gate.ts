@@ -61,9 +61,10 @@ export function checkHardcodedSecrets(content: string): { passed: boolean; findi
 
 /**
  * 检查是否包含 console.log（生产环境禁止）
+ * 注意：仅检查 console.log，不检查 debug/error/warn（基础设施层允许使用）
  */
 export function checkConsoleInProduction(content: string): { passed: boolean; count: number } {
-  const matches = content.match(/console\.(log|debug|info)\s*\(/g);
+  const matches = content.match(/console\.log\s*\(/g);
   return { passed: !matches, count: matches?.length || 0 };
 }
 

@@ -1,61 +1,48 @@
-/**
- * Command Handler - 创建测试用例
- * Command: 改变系统状态的操作
- */
-
 import { CreateTestCaseInputSchema, type CreateTestCaseInput } from '@/contracts/testcase.contract';
-import { TestCaseEntity } from '@/domain/entities';
-import { withTrace, createAuditLog } from '@/guard';
-import type { TestCase } from '@/lib/types';
+import { TestCaseEntity } from '@/domain/entities/test-case.entity';
+import { getTestCaseRepository } from '@/infrastructure/repositories';
+import { withTrace } from '@/guard';
+import type { TestStep } from '@/lib/types';
 
-/**
- * 创建测试用例 Command Handler
- * 遵循契约：输入校验 → 业务规则 → 创建实体 → 审计日志
- */
+export type CreateTestCaseCommand = CreateTestCaseInput;
+
 export async function handleCreateTestCase(
-  input: CreateTestCaseInput,
-  userId: string,
-  projectId: string,
+  input: CreateTestCaseCommand,
   traceId?: string
-): Promise<TestCase> {
-  return withTrace('CreateTestCaseHandler', async () => {
-    // Step 1: 契约校验
-    const validatedInput = CreateTestCaseInputSchema.parse(input);
+) {
+  return withTrace('CreateTestCase', async (tid) => {
+    const validated = CreateTestCaseInputSchema.parse(input);
 
-    // Step 2: 创建实体
-    const now = new Date().toISOString();
-    const testCase = new TestCaseEntity({
+    const steps: TestStep[] = validated.steps.map((s, i) => ({
+      order: i + 1,
+      action: s.action,
+      expected: s.expected,
+    }));
+
+    const entity = new TestCaseEntity({
       id: `TC-${Date.now()}`,
-      projectId,
-      title: validatedInput.title,
-      description: validatedInput.description || '',
-      module: validatedInput.module,
-      priority: validatedInput.priority,
-      type: validatedInput.type,
+      projectId: 'default',
+      title: validated.title,
+      description: validated.description,
+      module: validated.module,
+      priority: validated.priority,
+      type: validated.type,
       status: 'draft',
-      precondition: validatedInput.precondition || '',
-      steps: validatedInput.steps.map((s, i) => ({ order: i + 1, action: s.action, expected: s.expected })),
-      expectedResult: validatedInput.expectedResult,
-      tags: validatedInput.tags || [],
-      createdBy: userId,
-      assignedTo: validatedInput.assignedTo || userId,
-      createdAt: now,
-      updatedAt: now,
+      precondition: validated.precondition,
+      steps,
+      expectedResult: validated.expectedResult,
+      tags: validated.tags ?? [],
+      createdBy: 'current-user',
+      assignedTo: validated.assignedTo ?? '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       lastExecutedAt: null,
       passRate: 0,
       executionCount: 0,
     });
 
-    // Step 3: 审计日志
-    createAuditLog({
-      action: 'CREATE_TEST_CASE',
-      entityType: 'TestCase',
-      entityId: testCase.id,
-      userId,
-      details: { title: testCase.title, module: testCase.module, priority: testCase.priority },
-      traceId,
-    });
-
-    return testCase.toDTO();
-  }, traceId);
+    const repo = getTestCaseRepository();
+    const created = await repo.create(entity.toDTO());
+    return created;
+  });
 }
