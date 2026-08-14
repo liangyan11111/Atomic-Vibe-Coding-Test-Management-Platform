@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Bell, Shield, Palette, Globe, Key } from 'lucide-react';
+import { User, Bell, Shield, Palette, Globe, Key, Bot } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ export default function SettingsPage() {
           <TabsTrigger value="notifications" className="text-xs gap-1.5"><Bell className="h-3.5 w-3.5" />通知</TabsTrigger>
           <TabsTrigger value="security" className="text-xs gap-1.5"><Shield className="h-3.5 w-3.5" />安全</TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs gap-1.5"><Palette className="h-3.5 w-3.5" />外观</TabsTrigger>
+          <TabsTrigger value="ai" className="text-xs gap-1.5"><Bot className="h-3.5 w-3.5" />AI 配置</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -189,6 +190,57 @@ export default function SettingsPage() {
                   <p className="text-xs text-slate-500">减少间距，显示更多信息</p>
                 </div>
                 <Switch />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ai">
+          <Card className="border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="text-sm">AI 模型配置</CardTitle>
+              <CardDescription className="text-xs">配置 Vibe Coding 使用的 LLM 模型</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs">模型提供商</Label>
+                <Select defaultValue="coze">
+                  <SelectTrigger className="w-64 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="coze">Coze (豆包/DeepSeek)</SelectItem>
+                    <SelectItem value="openai">OpenAI</SelectItem>
+                    <SelectItem value="custom">自定义</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">模型</Label>
+                <Select defaultValue="doubao-seed-2-0-mini-260215">
+                  <SelectTrigger className="w-64 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="doubao-seed-2-0-mini-260215">Doubao Seed 2.0 Mini</SelectItem>
+                    <SelectItem value="doubao-seed-2-0-260215">Doubao Seed 2.0</SelectItem>
+                    <SelectItem value="deepseek-v3-250324">DeepSeek V3</SelectItem>
+                    <SelectItem value="deepseek-r1-250120">DeepSeek R1</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Temperature</Label>
+                <Input type="number" defaultValue="0.7" min="0" max="2" step="0.1" className="w-32 text-sm" />
+                <p className="text-[11px] text-slate-500">控制输出的随机性，0 为确定性输出，2 为最大随机性</p>
+              </div>
+              <Separator />
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-xs font-medium text-slate-700">环境变量配置</p>
+                <p className="text-[11px] text-slate-500 mt-1">生产环境请通过环境变量设置：</p>
+                <code className="mt-1 block text-[11px] text-slate-600 font-mono">
+                  LLM_PROVIDER, LLM_MODEL, LLM_TEMPERATURE, LLM_MAX_TOKENS
+                </code>
               </div>
             </CardContent>
           </Card>

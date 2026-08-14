@@ -7,7 +7,7 @@
  * 生成唯一的 Trace ID
  */
 export function generateTraceId(): string {
-  return `trace-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  return `trace-${crypto.randomUUID()}`;
 }
 
 /**

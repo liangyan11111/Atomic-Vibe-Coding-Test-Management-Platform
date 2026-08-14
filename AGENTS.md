@@ -81,14 +81,39 @@ src/
 │   ├── reports/page.tsx        # 测试报告
 │   ├── projects/page.tsx       # 项目管理
 │   ├── vibe-catalog/page.tsx   # 组件 Vibe 百科
-│   └── settings/page.tsx       # 系统设置
+│   ├── settings/page.tsx       # 系统设置（含 AI 模型配置）
+│   └── api/                    # API 路由
+│       ├── health/route.ts     # 健康检查
+│       ├── vibe-chat/route.ts  # Vibe 对话（SSE 流式）
+│       └── vibe/               # Vibe 会话与版本管理
+│           ├── sessions/       # 会话 CRUD + 消息管理
+│           └── versions/       # 版本 CRUD + 文件变更
 ├── components/
 │   ├── layout/
 │   │   ├── app-sidebar.tsx     # 侧边导航栏
 │   │   └── top-bar.tsx         # 顶部栏（搜索 + 通知 + 用户）
 │   ├── charts/
 │   │   └── dashboard-charts.tsx # 仪表盘图表组件
+│   ├── vibe-workspace/
+│   │   ├── global-vibe-entry.tsx    # 全局 Vibe 入口（含会话管理）
+│   │   ├── module-vibe-entry.tsx    # 模块级 Vibe 入口
+│   │   ├── feature-item-vibe-entry.tsx # 功能项级 Vibe 入口
+│   │   └── vibe-version-panel.tsx   # 版本管理面板（diff 查看）
 │   └── ui/                     # shadcn/ui 基础组件
+├── infrastructure/
+│   ├── llm/
+│   │   └── llm-provider.ts    # LLM 配置抽象层（环境变量驱动）
+│   ├── repositories/           # InMemory Repository 实现
+│   └── tracing/                # Trace ID 全链路追踪
+├── contracts/                  # Zod 契约定义
+├── guard/                      # Guard Layer（校验 + 门禁 + 审计）
+├── domain/                     # DDD 领域层（实体 + 值对象 + 仓储接口）
+├── storage/
+│   └── database/
+│       ├── supabase-client.ts  # Supabase 客户端（service_role_key）
+│       ├── shared/schema.ts    # Drizzle 表结构定义
+│       ├── vibe-session.repository.ts  # 会话 + 消息 CRUD
+│       └── vibe-version.repository.ts  # 版本 + 文件变更 CRUD
 ├── lib/
 │   ├── utils.ts                # 工具函数 (cn)
 │   ├── types.ts                # 全局类型定义
@@ -112,4 +137,34 @@ src/
 
 - 类型定义集中在 `src/lib/types.ts`
 - Mock 数据集中在 `src/lib/mock-data.ts`，包含辅助查询函数（如 `getTestCaseById`、`getMemberName` 等）
-- 后续接入真实 API 时，替换 mock-data 中的函数实现即可
+- 数据库使用 Supabase PostgreSQL，表结构定义在 `src/storage/database/shared/schema.ts`
+- Vibe 会话/版本数据通过 Supabase SDK 读写（`vibe-session.repository.ts`、`vibe-version.repository.ts`）
+- 业务实体（TestCase/Defect/TestPlan）暂用 InMemory Repository，后续可替换为 Supabase 实现
+
+## API 路由
+
+| 路由 | 方法 | 说明 |
+|------|------|------|
+| `/api/health` | GET | 健康检查，返回系统状态和数据统计 |
+| `/api/vibe-chat` | POST | Vibe 对话，SSE 流式 LLM 响应 |
+| `/api/vibe/sessions` | GET | 获取会话列表 |
+| `/api/vibe/sessions` | POST | 创建新会话 |
+| `/api/vibe/sessions/[id]` | GET | 获取会话详情（含消息） |
+| `/api/vibe/sessions/[id]` | PATCH | 更新会话标题/状态 |
+| `/api/vibe/sessions/[id]` | DELETE | 删除会话（级联删除消息） |
+| `/api/vibe/sessions/[id]/messages` | POST | 添加消息（支持单条/批量） |
+| `/api/vibe/versions?sessionId=x` | GET | 获取版本列表 |
+| `/api/vibe/versions` | POST | 创建版本（含文件变更） |
+| `/api/vibe/versions/[id]` | GET | 获取版本详情（含 diff） |
+| `/api/vibe/versions/[id]` | PATCH | 更新版本状态 |
+| `/api/vibe/versions/[id]` | DELETE | 删除版本（级联删除文件变更） |
+
+## LLM 配置
+
+通过环境变量配置，支持多模型：
+- `LLM_PROVIDER` — 提供商（默认 `coze`）
+- `LLM_MODEL` — 模型名（默认 `doubao-seed-2-0-mini-260215`）
+- `LLM_TEMPERATURE` — 温度（默认 `0.7`）
+- `LLM_MAX_TOKENS` — 最大 token 数
+
+抽象层位于 `src/infrastructure/llm/llm-provider.ts`，设置页面位于 `/settings` 的 "AI 配置" 标签页。

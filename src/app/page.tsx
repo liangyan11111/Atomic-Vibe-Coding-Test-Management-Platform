@@ -75,7 +75,7 @@ function getActivityColor(type: Activity['type']): string {
 }
 
 function timeAgo(timestamp: string): string {
-  const now = new Date('2025-08-10T16:00:00Z');
+  const now = new Date();
   const date = new Date(timestamp);
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);

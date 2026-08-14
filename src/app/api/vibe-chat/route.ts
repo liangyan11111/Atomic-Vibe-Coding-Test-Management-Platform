@@ -1,15 +1,10 @@
 /**
  * Vibe Chat API Route
- * 流式 LLM 响应，用于 Vibe Coding 工作台
+ * 流式 LLM 响应，使用 LLM Provider 抽象层
  */
-import { LLMClient } from 'coze-coding-dev-sdk';
+import { getLLMConfig, streamChat, type ChatMessage } from '@/infrastructure/llm/llm-provider';
 
 export const runtime = 'nodejs';
-
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
 
 interface VibeChatRequest {
   messages: ChatMessage[];
@@ -44,7 +39,7 @@ export async function POST(request: Request) {
       return Response.json({ error: '消息列表不能为空' }, { status: 400 });
     }
 
-    const client = new LLMClient();
+    const config = getLLMConfig();
 
     // 构建上下文增强的系统提示
     let enhancedSystemPrompt = SYSTEM_PROMPT;
@@ -58,14 +53,12 @@ export async function POST(request: Request) {
       enhancedSystemPrompt += `\n操作类型：${context.action}`;
     }
 
-    const allMessages = [
+    const allMessages: ChatMessage[] = [
       { role: 'system' as const, content: enhancedSystemPrompt },
       ...messages,
     ];
 
-    const stream = client.stream(allMessages, {
-      model: 'doubao-seed-2-0-mini-260215',
-    });
+    const stream = streamChat(allMessages, { model: config.model });
 
     // 将 LLM 流转换为 SSE 流
     const encoder = new TextEncoder();
@@ -73,11 +66,8 @@ export async function POST(request: Request) {
       async start(controller) {
         try {
           for await (const chunk of stream) {
-            const content = chunk.content;
-            if (content && typeof content === 'string' && content.length > 0) {
-              const sseData = `data: ${JSON.stringify({ content })}\n\n`;
-              controller.enqueue(encoder.encode(sseData));
-            }
+            const sseData = `data: ${JSON.stringify({ content: chunk.content })}\n\n`;
+            controller.enqueue(encoder.encode(sseData));
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
@@ -94,6 +84,7 @@ export async function POST(request: Request) {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {
