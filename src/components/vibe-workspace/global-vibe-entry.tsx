@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   MessageSquare, X, Send, Sparkles, Loader2, Plus, History,
-  Trash2, ChevronLeft, Clock,
+  Trash2, ChevronLeft, Clock, GitBranch, Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { VibeVersionPanel } from './vibe-version-panel';
 
 /**
  * 全局 Vibe 入口 - 底部悬浮按钮
@@ -38,11 +39,13 @@ interface ChatMessage {
 export function GlobalVibeEntry() {
   const [isOpen, setIsOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showVersions, setShowVersions] = useState(false);
   const [sessions, setSessions] = useState<VibeSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<VibeMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingVersion, setIsSavingVersion] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -137,6 +140,50 @@ export function GlobalVibeEntry() {
       // silent
     }
   }, []);
+
+  // 保存版本
+  const saveVersion = useCallback(async () => {
+    if (!currentSessionId || isSavingVersion) return;
+    setIsSavingVersion(true);
+    try {
+      // 获取当前版本数量
+      const res = await fetch(`/api/vibe/versions?sessionId=${currentSessionId}`);
+      const json = await res.json();
+      const versionCount = json.success ? json.data.length : 0;
+      const nextVersion = `${versionCount + 1}.0.0`;
+
+      // 收集文件变更（从消息中提取代码块）
+      const fileChanges: Array<{ filePath: string; action: string; afterContent: string }> = [];
+      for (const msg of messages) {
+        if (msg.role === 'assistant') {
+          const codeBlockRegex = /```(\w+)?\s*\n([\s\S]*?)```/g;
+          let match;
+          while ((match = codeBlockRegex.exec(msg.content)) !== null) {
+            fileChanges.push({
+              filePath: `generated/${match[1] || 'code'}/block-${fileChanges.length + 1}`,
+              action: 'create',
+              afterContent: match[2].trim(),
+            });
+          }
+        }
+      }
+
+      await fetch('/api/vibe/versions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          version: nextVersion,
+          description: `对话生成版本 ${nextVersion}`,
+          fileChanges,
+        }),
+      });
+    } catch {
+      // silent
+    } finally {
+      setIsSavingVersion(false);
+    }
+  }, [currentSessionId, messages, isSavingVersion]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -316,28 +363,28 @@ export function GlobalVibeEntry() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div className="flex items-center gap-2.5">
-              {showHistory ? (
+              {(showHistory || showVersions) ? (
                 <button
-                  onClick={() => setShowHistory(false)}
+                  onClick={() => { setShowHistory(false); setShowVersions(false); }}
                   className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
               ) : null}
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500">
-                {showHistory ? <History className="h-4 w-4 text-white" /> : <Sparkles className="h-4 w-4 text-white" />}
+                {showHistory ? <History className="h-4 w-4 text-white" /> : showVersions ? <GitBranch className="h-4 w-4 text-white" /> : <Sparkles className="h-4 w-4 text-white" />}
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">
-                  {showHistory ? '历史会话' : 'Vibe Coding 助手'}
+                  {showHistory ? '历史会话' : showVersions ? '版本历史' : 'Vibe Coding 助手'}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  {showHistory ? `${sessions.length} 个会话` : 'AI 驱动的智能测试管理'}
+                  {showHistory ? `${sessions.length} 个会话` : showVersions ? `会话 ${currentSessionId ? '' : '未选择'}` : 'AI 驱动的智能测试管理'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {!showHistory && (
+              {!showHistory && !showVersions && (
                 <>
                   <button
                     onClick={() => setShowHistory(true)}
@@ -345,6 +392,22 @@ export function GlobalVibeEntry() {
                     title="历史会话"
                   >
                     <History className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setShowVersions(true)}
+                    disabled={!currentSessionId}
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="版本历史"
+                  >
+                    <GitBranch className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={saveVersion}
+                    disabled={!currentSessionId || messages.length === 0 || isSavingVersion}
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="保存版本"
+                  >
+                    {isSavingVersion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   </button>
                   <button
                     onClick={createNewSession}
@@ -408,6 +471,10 @@ export function GlobalVibeEntry() {
                   ))}
                 </div>
               )}
+            </div>
+          ) : showVersions && currentSessionId ? (
+            <div className="flex-1 overflow-y-auto">
+              <VibeVersionPanel sessionId={currentSessionId} />
             </div>
           ) : (
             <>

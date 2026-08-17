@@ -10,8 +10,19 @@ interface VibeChatRequest {
   messages: ChatMessage[];
   context?: {
     module?: string;
+    modulePath?: string;
+    moduleContext?: {
+      name: string;
+      path: string;
+      description?: string;
+    };
     component?: string;
     action?: string;
+    featureItem?: {
+      id: string;
+      type: string;
+      title: string;
+    };
   };
 }
 
@@ -43,14 +54,26 @@ export async function POST(request: Request) {
 
     // 构建上下文增强的系统提示
     let enhancedSystemPrompt = SYSTEM_PROMPT;
-    if (context?.module) {
+    if (context?.moduleContext) {
+      enhancedSystemPrompt += `\n\n当前模块：${context.moduleContext.name}`;
+      enhancedSystemPrompt += `\n模块路径：${context.moduleContext.path}`;
+      if (context.moduleContext.description) {
+        enhancedSystemPrompt += `\n模块描述：${context.moduleContext.description}`;
+      }
+    } else if (context?.module) {
       enhancedSystemPrompt += `\n\n当前模块：${context.module}`;
+    }
+    if (context?.modulePath) {
+      enhancedSystemPrompt += `\n模块路径：${context.modulePath}`;
     }
     if (context?.component) {
       enhancedSystemPrompt += `\n相关组件：${context.component}`;
     }
     if (context?.action) {
       enhancedSystemPrompt += `\n操作类型：${context.action}`;
+    }
+    if (context?.featureItem) {
+      enhancedSystemPrompt += `\n功能项：[${context.featureItem.type}] ${context.featureItem.title}`;
     }
 
     const allMessages: ChatMessage[] = [

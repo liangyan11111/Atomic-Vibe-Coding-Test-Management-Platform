@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { GitBranch, ChevronRight, FileCode, Plus, Minus, Eye, Tag } from 'lucide-react';
+import { GitBranch, ChevronRight, FileCode, Plus, Minus, Eye, Tag, RotateCcw, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,8 @@ export function VibeVersionPanel({ sessionId, className }: VibeVersionPanelProps
   const [versions, setVersions] = useState<VibeVersion[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<VersionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRollingBack, setIsRollingBack] = useState(false);
+  const [rollbackSuccess, setRollbackSuccess] = useState(false);
 
   const loadVersions = useCallback(async () => {
     try {
@@ -103,6 +105,40 @@ export function VibeVersionPanel({ sessionId, className }: VibeVersionPanelProps
       default: return action;
     }
   };
+
+  // 回退到此版本
+  const handleRollback = useCallback(async () => {
+    if (!selectedVersion || isRollingBack) return;
+    setIsRollingBack(true);
+    try {
+      // 将版本的文件变更作为新版本创建
+      const res = await fetch('/api/vibe/versions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          version: `${versions.length + 1}.0.0`,
+          description: `回退到 v${selectedVersion.version.version}`,
+          parentVersionId: selectedVersion.version.id,
+          fileChanges: selectedVersion.fileChanges.map((fc) => ({
+            filePath: fc.file_path,
+            action: 'modify',
+            afterContent: fc.after_content,
+            beforeContent: fc.before_content,
+          })),
+        }),
+      });
+      if (res.ok) {
+        setRollbackSuccess(true);
+        setTimeout(() => setRollbackSuccess(false), 3000);
+        loadVersions();
+      }
+    } catch {
+      // silent
+    } finally {
+      setIsRollingBack(false);
+    }
+  }, [selectedVersion, isRollingBack, sessionId, versions.length, loadVersions]);
 
   // 简易 diff 渲染
   const renderDiff = (diff: string | null, afterContent: string) => {
@@ -257,6 +293,24 @@ export function VibeVersionPanel({ sessionId, className }: VibeVersionPanelProps
               }}
             >
               发布版本
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex-1 text-amber-600 border-amber-200 hover:bg-amber-50"
+              onClick={handleRollback}
+              disabled={isRollingBack}
+            >
+              {isRollingBack ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : rollbackSuccess ? (
+                <span className="text-emerald-600">已回退</span>
+              ) : (
+                <>
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  回退
+                </>
+              )}
             </Button>
           </div>
         </div>
